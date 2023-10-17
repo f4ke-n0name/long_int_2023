@@ -2,16 +2,16 @@
 
 
 void PrintError() {
-    std::cerr << "Undefined Behaviour";
+    std::cerr << "Unexpected Error";
     exit(EXIT_FAILURE);
 }
 
 bool GetSignBit(const int2023_t &num) {
-    return (num.block[int2023_t::SIZE - 1] >> (sizeof(num.block[int2023_t::SIZE]) * 8 - 1)) & 1;
+    return (num.block[int2023_t::kSIZE - 1] >> (sizeof(num.block[int2023_t::kSIZE]) * 8 - 1)) & 1;
 }
 int GetNotNullIndex(const int2023_t &value){
     int index = 0;
-    for (int i = int2023_t::SIZE - 1; i >= 0; --i) {
+    for (int i = int2023_t::kSIZE - 1; i >= 0; --i) {
         if (value.block[i] != 0) {
             index = i;
             break;
@@ -27,18 +27,18 @@ int2023_t from_int(int32_t i) {
         is_negative = true;
         i = -i;
     }
-    for (int j = 0; j < int2023_t::SIZE; ++j) {
-        num.block[j] = i % int2023_t::BASE;
-        i /= int2023_t::BASE;
+    for (int j = 0; j < int2023_t::kSIZE; ++j) {
+        num.block[j] = i % int2023_t::kBASE;
+        i /= int2023_t::kBASE;
     }
     if (is_negative) {
         if (GetSignBit(num)) {
             PrintError();
         } else {
-             return int2023_t(-num);
+             return -num;
         }
     }
-    return int2023_t(num);
+    return num;
 }
 
 int2023_t from_string(const char* buff) { 
@@ -46,7 +46,7 @@ int2023_t from_string(const char* buff) {
     int2023_t degree = from_int(10);
     int i = 0;
     bool is_negative = false;
-    if (!isdigit(buff[i])) {
+    if (buff[i] == '-') {
         ++i;
         is_negative = true;
     }
@@ -58,9 +58,9 @@ int2023_t from_string(const char* buff) {
         }
     }
     if (is_negative) {
-        return int2023_t(-result);
+        return -result;
     }
-    return int2023_t(result);
+    return result;
 }
 
 int2023_t GetAbs(const int2023_t& value) {
@@ -72,7 +72,7 @@ int2023_t GetAbs(const int2023_t& value) {
 
 int2023_t operator~(const int2023_t& value) {
     int2023_t result;
-    for (int i = 0; i < int2023_t::SIZE; ++i) {
+    for (int i = 0; i < int2023_t::kSIZE; ++i) {
         result.block[i] = ~value.block[i];
     }
     return int2023_t(result);
@@ -82,7 +82,7 @@ int2023_t operator-(const int2023_t& value) {
     int2023_t result;
     result = ~value;
     result.block[0] += 1;
-    return int2023_t(result);
+    return result;
 }
 
 int2023_t operator+(const int2023_t& lhs, const int2023_t& rhs) {
@@ -99,15 +99,15 @@ int2023_t operator+(const int2023_t& lhs, const int2023_t& rhs) {
     int carry = 0;
     int temporary = 0;
     int2023_t result;
-    for (int i = 0; i < int2023_t::SIZE || carry != 0; ++i) {
+    for (int i = 0; i < int2023_t::kSIZE || carry != 0; ++i) {
         temporary = lhs.block[i] + carry + rhs.block[i];
         result.block[i] = lhs.block[i] + carry + rhs.block[i];
-        carry = temporary >= int2023_t::BASE;
+        carry = temporary >= int2023_t::kBASE;
         if (carry != 0) {
-            result.block[i] = temporary - int2023_t::BASE;
+            result.block[i] = temporary - int2023_t::kBASE;
         }
     }
-    return int2023_t(result);
+    return result;
 }
 
 int2023_t operator-(const int2023_t& lhs, const int2023_t& rhs) {
@@ -123,12 +123,12 @@ int2023_t operator-(const int2023_t& lhs, const int2023_t& rhs) {
     int carry = 0;
     int temporary = 0;
     int2023_t result;
-    for (int i = 0; i < int2023_t::SIZE || carry != 0; ++i) {
+    for (int i = 0; i < int2023_t::kSIZE || carry != 0; ++i) {
         temporary = lhs.block[i] - carry - rhs.block[i];
         result.block[i] = lhs.block[i] - carry - rhs.block[i];
         carry = temporary < 0;
     }
-    return int2023_t(result);
+    return result;
 }
 
 int2023_t operator*(const int2023_t& lhs, const int2023_t& rhs) {
@@ -137,13 +137,13 @@ int2023_t operator*(const int2023_t& lhs, const int2023_t& rhs) {
     int2023_t abs_lhs = GetAbs(lhs);
     bool bit_lhs = GetSignBit(lhs);
     bool bit_rhs = GetSignBit(rhs);
-    for (int i = 0; i < int2023_t::SIZE; ++i) {
+    for (int i = 0; i < int2023_t::kSIZE; ++i) {
         int carry = 0;
-        for (int j = 0; j < int2023_t::SIZE || carry != 0; ++j) {
-            if (i + j < int2023_t::SIZE) {
+        for (int j = 0; j < int2023_t::kSIZE || carry != 0; ++j) {
+            if (i + j < int2023_t::kSIZE) {
                 long long current = result.block[i + j] + abs_lhs.block[i] * 1LL * abs_rhs.block[j] + carry;
-                result.block[i + j] = current % int2023_t::BASE;
-                carry = current / int2023_t::BASE;
+                result.block[i + j] = current % int2023_t::kBASE;
+                carry = current / int2023_t::kBASE;
             }
         }
     }
@@ -153,7 +153,7 @@ int2023_t operator*(const int2023_t& lhs, const int2023_t& rhs) {
     if ((int(bit_lhs) + int(bit_rhs)) % 2 == 1 && result != from_int(0)) {
         return int2023_t(-result);
     }
-    return int2023_t(result);
+    return result;
 }
 
 int2023_t operator/(const int2023_t& lhs, const int2023_t& rhs) {
@@ -172,7 +172,7 @@ int2023_t operator/(const int2023_t& lhs, const int2023_t& rhs) {
     int2023_t temporary;
     while (index >= 0) {
         left = -1;
-        right = int2023_t::BASE;
+        right = int2023_t::kBASE;
         while (left + 1 < right) {
             result.block[index] = (left + right) / 2;
             temporary = result * abs_rhs;
@@ -193,11 +193,11 @@ int2023_t operator/(const int2023_t& lhs, const int2023_t& rhs) {
     if ((int(bit_lhs) + int(bit_rhs)) % 2 == 1 && result != from_int(0)) {
         result = -result;
     }
-    return int2023_t(result);
+    return result;
 }
 
 bool operator==(const int2023_t& lhs, const int2023_t& rhs) {
-    for (int i = 0; i < int2023_t::SIZE; ++i) {
+    for (int i = 0; i < int2023_t::kSIZE; ++i) {
         if (lhs.block[i] != rhs.block[i]) {
             return false;
         }
@@ -220,7 +220,7 @@ bool operator<(const int2023_t& lhs, const int2023_t& rhs) {
     if (bit_rhs) {
         return false;
     }
-    for (int i = int2023_t::SIZE - 1; i >= 0; --i) {
+    for (int i = int2023_t::kSIZE - 1; i >= 0; --i) {
         if (lhs.block[i] != rhs.block[i]) {
             return lhs.block[i] < rhs.block[i];
         }
@@ -252,8 +252,8 @@ std::ostream& operator<<(std::ostream& stream, const int2023_t& value) {
         stream << '-';
         result = -value;
     } 
-    for (int i = int2023_t::SIZE - 1; i >= 0; --i) {
-         stream << static_cast<unsigned int>(result.block[i]) << ' ';
+    for (int i = int2023_t::kSIZE - 1; i >= 0; --i) {
+         stream << static_cast<unsigned int>(result.block[i]);
     }
     return stream;
 }

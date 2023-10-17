@@ -4,9 +4,9 @@
 
 
 struct int2023_t {
-    uint8_t block[253] = { 0 };
-    const static int BASE = 256;
-    const static int SIZE = 253;
+    const static int kBASE = 256;
+    const static int kSIZE = 253;
+    uint8_t block[kSIZE]{};
 };
 
 static_assert(sizeof(int2023_t) <= 253, "Size of int2023_t must be no higher than 253 bytes");
